@@ -16,64 +16,66 @@ Define a Python function to calculate the volume of a cylinder based on its radi
 Integrate the function into an LLM-based chat completion system with function-calling capabilities.
 ### PROGRAM:
 ```
+import math
 import os
+from dotenv import load_dotenv, find_dotenv
 import openai
-```
-```
-from dotenv import load_dotenv, find_dotenv
+
 _ = load_dotenv(find_dotenv())  # read local .env file
 openai.api_key = os.environ['OPENAI_API_KEY']
-```
-```
-from dotenv import load_dotenv, find_dotenv
-_ = load_dotenv(find_dotenv())  # read local .env file
-openai.api_key = os.environ['OPENAI_API_KEY']
-```
-```
-def chat_with_llm(user_input):
-    # OpenAI API call for chat completion
-    response = openai.ChatCompletion.create(
-        model="gpt-4-0613",  # Function-calling supported model
-        messages=[{"role": "user", "content": user_input}],
-        functions=[function_schema],
-        function_call="auto",  # Let the LLM decide when to use the function
-    )
 
-    # Check if a function call is needed
-    if response.choices[0].message.get("function_call"):
-        function_call = response.choices[0].message["function_call"]
-        # Extract arguments
-        arguments = eval(function_call["arguments"])  # Use safe parsing methods in production
-        radius = arguments["radius"]
-        height = arguments["height"]
-
-        # Calculate volume
-        volume = calculate_cylinder_volume(radius, height)
-
-        # Send the result back to the LLM for a final response
-        response = openai.ChatCompletion.create(
-            model="gpt-4-0613",
-            messages=[
-                {"role": "user", "content": user_input},
-                response.choices[0].message,  # Include the function call
-                {
-                    "role": "function",
-                    "name": "calculate_cylinder_volume",
-                    "content": str(volume),
-                },
-            ],
-        )
+def calculate_cylinder_volume(radius, height): 
+    if radius <= 0 or height <= 0:
+        return "Enter a valid value."
     
-    return response.choices[0].message["content"]
-```
+    volume = math.pi * (radius ** 2) * height
+    return round(volume, 2)
+
+def chat_with_openai(prompt):
+    response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": "You are an assistant that helps calculate the volume of a cylinder."},
+            {"role": "user", "content": prompt},
+        ],
+        functions=[
+            {
+                "name": "calculate_cylinder_volume",
+                "description": "Calculate the volume of a cylinder given radius and height.",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "radius": {"type": "number", "description": "Radius of the cylinder (in units)"},
+                        "height": {"type": "number", "description": "Height of the cylinder (in units)"},
+                    },
+                    "required": ["radius", "height"],
+                },
+            }
+        ],
+        function_call="auto",  
+    )
+    
+    if "function_call" in response["choices"][0]["message"]:
+        function_name = response["choices"][0]["message"]["function_call"]["name"]
+        arguments = eval(response["choices"][0]["message"]["function_call"]["arguments"])
+        if function_name == "calculate_cylinder_volume":
+            radius = arguments["radius"]
+            height = arguments["height"]
+            return calculate_cylinder_volume(radius, height)
+    
+    return response["choices"][0]["message"]["content"]
+
+radius = float(input("Enter the radius of the cylinder: "))
+height = float(input("Enter the height of the cylinder: "))
+
+prompt = f"What is the volume of a cylinder with a radius of {radius} and a height of {height}?"
+result = chat_with_openai(prompt)
+print("Result:", result)
 ```
 
-user_input = "What is the volume of a cylinder with radius 3 and height 5?"
-output = chat_with_llm(user_input)
-print(output)
-```
 ### OUTPUT:
-![image](https://github.com/user-attachments/assets/1be3d6a9-4ca2-4484-a791-42fcf684cb19)
+![image](https://github.com/user-attachments/assets/619c1d5b-5e03-4d48-a482-7bc75188080b)
+
 
 ### RESULT:
 Hence,the python program to design and implement a Python function for calculating the volume of a cylinder, integrating it with a chat completion system utilizing the function-calling feature of a large language model (LLM) is successfully demonstrated.
