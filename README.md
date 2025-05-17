@@ -6,6 +6,12 @@ To design and implement a Python function for calculating the volume of a cylind
 ### PROBLEM STATEMENT:
 
 ### DESIGN STEPS:
+Design and implement a system where:
+
+1.Users interact with a chat interface to calculate the volume of a cylinder.
+2.User inputs such as the radius and height of the cylinder are extracted via the LLM.
+3.The extracted inputs are passed to a Python function that calculates the volume.
+4.The LLM integrates this function and provides the result to the user.
 
 #### STEP 1:
 Import necessary libraries, including OpenAI for LLM integration and math for mathematical operations.
